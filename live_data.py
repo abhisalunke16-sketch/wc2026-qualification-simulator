@@ -209,7 +209,7 @@ def get_all_data():
         if teams and fixtures:
             done  = sum(1 for f in fixtures if f["status"] == "FINISHED")
             total = len(fixtures)
-            ts    = datetime.now(timezone.est).strftime("%H:%M EST")
+            ts = datetime.now(ZoneInfo("America/Toronto")).strftime("%H:%M %Z")
             msg   = (
                 f"{done}/{total} group matches played · Updated {ts}"
             )
