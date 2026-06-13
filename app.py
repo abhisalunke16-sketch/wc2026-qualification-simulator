@@ -2,11 +2,11 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from data import TEAMS, GROUPS
-from live_data import get_merged_fixtures
+from data import GROUPS
+from live_data import get_all_data
 
 st.set_page_config(
-    page_title="FIFA WC 2026 — Qualification Simulator",
+    page_title="FIFA WC 2026 | Qualification Simulator",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -213,6 +213,11 @@ div[data-testid="stMetricValue"] { font-size: 28px !important; font-weight: 800 
 /* General text colour */
 p, li, span { color: #ffffff; }
 h1, h2, h3 { color: #a8e6b8 !important; }
+
+@media (prefers-color-scheme: light) {
+    html, body, [class*="css"], .stApp, .block-container,
+    p, span, div, label, .stMarkdown, .stText { color: #000000 !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -295,7 +300,7 @@ def story_text(tid, standings, prob):
     if prob >= 0.80 and rank <= 2: return f"{t['name']} is in a strong position ({pct}%). A win in their next match would all but seal qualification."
     if prob >= 0.60 and rank == 2: return f"{t['name']} controls their own fate at {pct}%. Avoid defeat and qualification is very likely."
     if prob >= 0.40 and rank == 3: return f"{t['name']} is on the edge at {pct}%. They need a win and help from other results to advance."
-    if remaining == 1: return f"It all comes down to the final match for {t['name']}. At {pct}%, every goal counts — especially goal difference."
+    if remaining == 1: return f"It all comes down to the final match for {t['name']}. At {pct}%, every goal counts, especially goal difference."
     if prob < 0.25: return f"{t['name']}'s path is extremely narrow at {pct}%. They need wins and favourable results elsewhere."
     return f"{t['name']} has a {pct}% chance of advancing from {remaining} remaining match{'es' if remaining > 1 else ''}."
 
@@ -314,20 +319,18 @@ def pbar(prob, max_width=110):
 st.markdown("""
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-title">⚽ FIFA World Cup 2026 — Qualification Simulator</div>
+    <div class="hero-title">⚽ FIFA World Cup 2026 | Qualification Simulator</div>
     <div class="hero-sub">USA · Canada · Mexico &nbsp;|&nbsp; Group stage: Jun 11 – Jun 26, 2026</div>
     <div class="hero-badges">
       <span class="hero-badge live">● Live</span>
-      <span class="hero-badge">Runs 8,000 simulations per calculation</span>
-      <span class="hero-badge">Predicts scores using team strength data</span>
-      <span class="hero-badge">Test any match result instantly</span>
       <span class="hero-badge">48 teams · 12 groups</span>
+      <span class="hero-badge">Abhishek Salunke</span>
     </div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-FIXTURES, data_source, live_status_msg = get_merged_fixtures()
+TEAMS, FIXTURES, data_source, live_status_msg = get_all_data()
 
 with st.spinner("Fetching latest scores and running simulations..."):
     fixtures_key = tuple((f["id"], f["status"], f.get("hs"), f.get("as")) for f in FIXTURES)
@@ -345,7 +348,7 @@ else:
     st.markdown(
         '<div style="background:#1a1a0a;border:1px solid #4a4a1a;border-radius:8px;'
         'padding:7px 14px;margin-bottom:0.75rem;font-size:12px;color:#c8c870;">'
-        '⚠&nbsp;&nbsp;Using static data — add your football-data.org API key in Streamlit secrets to enable live score updates.'
+        '⚠&nbsp;&nbsp;Using static data: add your football-data.org API key in Streamlit secrets to enable live score updates.'
         '</div>',
         unsafe_allow_html=True
     )
@@ -480,7 +483,7 @@ with tab3:
     wi_remaining = [f for f in FIXTURES if f["g"] == wi_group and f["status"] == "SCHEDULED"]
 
     if not wi_remaining:
-        st.success(f"All Group {wi_group} matches have been played — no what-if needed!")
+        st.success(f"All Group {wi_group} matches have been played, no what-if needed!")
     else:
         overrides = {}
         st.markdown('<div class="section-head">Set match results</div>', unsafe_allow_html=True)
@@ -532,7 +535,7 @@ with tab3:
                     ov_tuple = tuple(sorted((k, v) for k, v in overrides.items()))
                     wi_probs = run_simulation(fixtures_tuple=fixtures_key, overrides_tuple=ov_tuple, n=8000)
 
-                st.markdown(f'<div class="section-head">Probability comparison — Group {wi_group}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="section-head">Probability comparison: Group {wi_group}</div>', unsafe_allow_html=True)
                 wi_standings = get_actual_standings(wi_group)
 
                 for row in wi_standings:
@@ -543,7 +546,7 @@ with tab3:
                     after_pct = round(after * 100)
                     delta = after_pct - before_pct
                     dcls = "delta-pos" if delta > 0 else "delta-neg" if delta < 0 else "delta-neu"
-                    dstr = f"+{delta}%" if delta > 0 else f"{delta}%" if delta < 0 else "—"
+                    dstr = f"+{delta}%" if delta > 0 else f"{delta}%" if delta < 0 else "0%"
                     after_col = "#1a6b2f" if after_pct >= 70 else "#2980b9" if after_pct >= 40 else "#c0392b"
                     st.markdown(
                         f'<div class="compare-row">'
@@ -583,7 +586,7 @@ with tab4:
         pts = row["pts"] if row else 0
         prob = base_probs.get(tid, 0)
         status, scls = get_status(prob)
-        all_rows.append({"id": tid, "name": t["name"], "flag": t["flag"], "group": t["group"],
+        all_rows.append({"id": tid, "name": t["name"], "group": t["group"],
                          "conf": t.get("conf", ""), "pts": pts, "prob": prob, "status": status, "scls": scls})
 
     if conf_filter != "All":
