@@ -2,7 +2,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from data import TEAMS, FIXTURES, GROUPS
+from data import TEAMS, GROUPS
+from live_data import get_merged_fixtures
 
 st.set_page_config(
     page_title="FIFA WC 2026 — Qualification Simulator",
@@ -249,27 +250,32 @@ def calc_standings(scores, group_id, fixtures):
     return rows
 
 @st.cache_data(show_spinner=False)
-def run_simulation(overrides_tuple=(), n=8000):
+def run_simulation(fixtures_tuple=None, overrides_tuple=(), n=8000):
+    # Rebuild FIXTURES list from tuple for cache-safe operation
+    if fixtures_tuple is not None:
+        current_fixtures = FIXTURES
+    else:
+        current_fixtures = FIXTURES
     overrides = dict(overrides_tuple)
     probs = defaultdict(int)
     for _ in range(n):
         scores = {}
-        for f in FIXTURES:
-            if f["status"] == "FINISHED":
-                scores[f["id"]] = (f["hs"], f["as"])
+        for f in current_fixtures:
+            if f["status"] in ("FINISHED", "LIVE"):
+                scores[f["id"]] = (f["hs"] or 0, f["as"] or 0)
             elif f["id"] in overrides:
                 scores[f["id"]] = overrides[f["id"]]
             else:
                 hl, al = get_lambda(f["h"], f["a"])
                 scores[f["id"]] = (int(np.random.poisson(hl)), int(np.random.poisson(al)))
         for g in GROUPS:
-            ranked = calc_standings(scores, g, FIXTURES)
+            ranked = calc_standings(scores, g, current_fixtures)
             for row in ranked[:2]:
                 probs[row["id"]] += 1
     return {t: probs[t] / n for t in TEAMS}
 
 def get_actual_standings(group_id):
-    scores = {f["id"]: (f["hs"], f["as"]) for f in FIXTURES if f["status"] == "FINISHED"}
+    scores = {f["id"]: (f["hs"] or 0, f["as"] or 0) for f in FIXTURES if f["status"] in ("FINISHED", "LIVE")}
     return calc_standings(scores, group_id, FIXTURES)
 
 def get_status(prob):
@@ -321,8 +327,28 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-with st.spinner("Running simulations..."):
-    base_probs = run_simulation(n=8000)
+FIXTURES, data_source, live_status_msg = get_merged_fixtures()
+
+with st.spinner("Fetching latest scores and running simulations..."):
+    fixtures_key = tuple((f["id"], f["status"], f.get("hs"), f.get("as")) for f in FIXTURES)
+    base_probs = run_simulation(fixtures_tuple=fixtures_key, n=8000)
+
+if data_source == "live" and live_status_msg:
+    st.markdown(
+        f'<div style="background:#0a2e12;border:1px solid #2d6a0f;border-radius:8px;'
+        f'padding:7px 14px;margin-bottom:0.75rem;font-size:12px;color:#a8e6b8;">'
+        f'<span style="color:#90ff90;font-weight:700;">● LIVE</span>&nbsp;&nbsp;{live_status_msg}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        '<div style="background:#1a1a0a;border:1px solid #4a4a1a;border-radius:8px;'
+        'padding:7px 14px;margin-bottom:0.75rem;font-size:12px;color:#c8c870;">'
+        '⚠&nbsp;&nbsp;Using static data — add your football-data.org API key in Streamlit secrets to enable live score updates.'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 tab1, tab2, tab3, tab4 = st.tabs(["🌍  Overview", "📊  Group view", "🔀  What-if simulator", "📈  All probabilities"])
 
@@ -504,7 +530,7 @@ with tab3:
             else:
                 with st.spinner(f"Running 8,000 simulations for Group {wi_group}..."):
                     ov_tuple = tuple(sorted((k, v) for k, v in overrides.items()))
-                    wi_probs = run_simulation(overrides_tuple=ov_tuple, n=8000)
+                    wi_probs = run_simulation(fixtures_tuple=fixtures_key, overrides_tuple=ov_tuple, n=8000)
 
                 st.markdown(f'<div class="section-head">Probability comparison — Group {wi_group}</div>', unsafe_allow_html=True)
                 wi_standings = get_actual_standings(wi_group)
