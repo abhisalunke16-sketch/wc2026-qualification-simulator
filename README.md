@@ -1,6 +1,6 @@
 # ⚽ FIFA World Cup 2026 — Group Qualification Simulator
 
-> **Live app:** [your-app.streamlit.app](https://your-app.streamlit.app) *(update after deploy)*
+> **Live app:** [your-app.streamlit.app](https://wc2026-qualification-simulator-kesepkfozfm9u9ikrt9bfk.streamlit.app/) *(update after deploy)*
 
 A data engineering + analytics portfolio project built during the **FIFA World Cup 2026 group stage (Jun 11 – Jun 26)**. Calculates real-time qualification probabilities for all 48 teams using Monte Carlo simulation and a Poisson scoring model.
 
