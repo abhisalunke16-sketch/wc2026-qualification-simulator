@@ -15,6 +15,7 @@ Only Poisson attack/defense ratings (not in the feed) are kept in data.py.
 import requests
 import streamlit as st
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from data import RATINGS, FALLBACK_FIXTURES, FALLBACK_TEAMS
 
 API_URL = (
@@ -209,7 +210,7 @@ def get_all_data():
         if teams and fixtures:
             done  = sum(1 for f in fixtures if f["status"] == "FINISHED")
             total = len(fixtures)
-	    ts = datetime.now(timezone.utc).strftime("%H:%M UTC")
+            ts = datetime.now(ZoneInfo("America/New_York")).strftime("%I:%M %p EST")
             msg   = (
                 f"{done}/{total} group matches played · Updated {ts}"
             )
