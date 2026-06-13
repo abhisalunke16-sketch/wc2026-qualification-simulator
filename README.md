@@ -1,6 +1,6 @@
 # ⚽ FIFA World Cup 2026 — Group Qualification Simulator
 
-> **Live app:** [your-app.streamlit.app](https://your-app.streamlit.app) *(update after deploy)*
+> **Live app:** [fifa2026qualificationsimulator](https://fifa2026qualificationsimulator.streamlit.app) 
 
 A data engineering + analytics portfolio project built during the **FIFA World Cup 2026 group stage (Jun 11 – Jun 26)**. Calculates real-time qualification probabilities for all 48 teams using Monte Carlo simulation and a Poisson scoring model.
 
@@ -97,7 +97,7 @@ A complete Databricks + PySpark + Delta Lake + ADF pipeline design for this proj
 
 ## Author
 
-**Abhi Salunke** — Senior Data Engineer  
+**Abhishek Salunke** — Senior Data Engineer  
 [LinkedIn](https://linkedin.com/in/abhisheksalunke12) · [Medium](https://medium.com/@abhisheksalunke)
 
 Built during the FIFA World Cup 2026 group stage as a live portfolio project.
