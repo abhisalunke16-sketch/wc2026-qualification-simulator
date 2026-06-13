@@ -13,32 +13,200 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1100px; }
-    .stButton > button { border-radius: 8px; font-weight: 500; }
-    .metric-card { background: #f8f9fa; border-radius: 10px; padding: 12px 16px; text-align: center; }
-    .metric-label { font-size: 12px; color: #6c757d; margin-bottom: 4px; }
-    .metric-value { font-size: 24px; font-weight: 600; color: #1a1a1a; }
-    .story-box { background: #f0f4ff; border-left: 4px solid #185FA5; padding: 10px 14px;
-                 border-radius: 0 8px 8px 0; font-size: 14px; color: #333; margin: 4px 0; }
-    .pill { display: inline-block; padding: 2px 10px; border-radius: 12px;
-            font-size: 11px; font-weight: 600; }
-    .pill-alive { background: #e6f1fb; color: #185FA5; }
-    .pill-qualified { background: #eaf3de; color: #2d6a0f; }
-    .pill-eliminated { background: #fcebeb; color: #a32d2d; }
-    thead th { background: #185FA5 !important; color: white !important; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+.block-container { padding-top: 0 !important; padding-bottom: 2rem; max-width: 1140px; }
+
+/* ── Hero banner ── */
+.hero {
+    background: #1a6b2f;
+    border-radius: 0 0 20px 20px;
+    padding: 28px 32px 22px;
+    margin: -1rem -1rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px,
+        transparent 1px, transparent 60px
+    ),
+    repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px,
+        transparent 1px, transparent 60px
+    );
+}
+.hero-title {
+    font-size: 28px; font-weight: 900; color: #ffffff;
+    letter-spacing: -0.5px; margin: 0; position: relative;
+}
+.hero-sub {
+    font-size: 13px; color: rgba(255,255,255,0.7);
+    margin-top: 4px; position: relative;
+}
+.hero-badges {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 12px; position: relative;
+}
+.hero-badge {
+    background: rgba(255,255,255,0.15);
+    color: #fff; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.25);
+}
+.hero-badge.live { background: #e63946; border-color: #e63946; }
+
+/* ── Tabs ── */
+.stTabs [data-baseweb="tab-list"] {
+    background: #f0f7f2;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 2px;
+    border: none;
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: #4a7c59 !important;
+    padding: 8px 18px !important;
+    border: none !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #1a6b2f !important;
+    color: white !important;
+}
+.stTabs [data-baseweb="tab-border"] { display: none !important; }
+
+/* ── Group card on overview ── */
+.group-card {
+    background: #fff;
+    border: 1px solid #e2ede6;
+    border-radius: 14px;
+    padding: 14px;
+    height: 100%;
+}
+.group-card-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    color: #1a6b2f; text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+}
+.group-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 8px; border-radius: 8px; margin: 2px 0; font-size: 13px;
+}
+.group-row.qualify { background: rgba(26,107,47,0.08); }
+
+/* ── Standings table ── */
+.pitch-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.pitch-table th {
+    background: #1a6b2f; color: #fff; padding: 9px 12px;
+    text-align: center; font-weight: 600; font-size: 11px; letter-spacing: 0.04em;
+}
+.pitch-table th:first-child { text-align: left; border-radius: 10px 0 0 0; }
+.pitch-table th:last-child { border-radius: 0 10px 0 0; }
+.pitch-table td { padding: 9px 12px; text-align: center; border-bottom: 1px solid #f0f5f2; color: #333; }
+.pitch-table td:first-child { text-align: left; font-weight: 500; }
+.pitch-table tr:last-child td { border-bottom: none; }
+.pitch-table tr:nth-child(1) td { background: rgba(26,107,47,0.07); }
+.pitch-table tr:nth-child(2) td { background: rgba(26,107,47,0.03); }
+.pitch-table-wrap { border: 1px solid #e2ede6; border-radius: 12px; overflow: hidden; }
+
+/* ── Match cards ── */
+.match-card {
+    background: #fff; border: 1px solid #e2ede6;
+    border-radius: 12px; padding: 12px 16px; margin: 6px 0;
+}
+.match-card-date { font-size: 10px; color: #6b9b7a; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+.match-card-row { display: flex; align-items: center; justify-content: space-between; }
+.match-team { font-size: 13px; font-weight: 600; color: #1a1a1a; flex: 1; }
+.match-team.right { text-align: right; }
+.match-score {
+    background: #1a6b2f; color: #fff;
+    font-size: 16px; font-weight: 800;
+    padding: 4px 14px; border-radius: 8px; min-width: 64px; text-align: center;
+}
+.match-upcoming { background: #f0f7f2; color: #4a7c59; font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 8px; min-width: 64px; text-align: center; }
+
+/* ── Story boxes ── */
+.story-card {
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f5ed 100%);
+    border: 1px solid #c8e6d0; border-left: 4px solid #1a6b2f;
+    border-radius: 0 10px 10px 0; padding: 11px 14px;
+    font-size: 13px; color: #2d4a35; margin: 5px 0; line-height: 1.6;
+}
+
+/* ── Status pills ── */
+.pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+.pill-alive    { background: #e6f1fb; color: #185FA5; }
+.pill-qualified { background: #d4edda; color: #1a6b2f; }
+.pill-eliminated { background: #fde8e8; color: #c0392b; }
+
+/* ── Prob bar ── */
+.pbar-wrap { display: flex; align-items: center; gap: 8px; }
+.pbar-track { height: 8px; background: #e2ede6; border-radius: 4px; overflow: hidden; flex: 1; max-width: 100px; }
+.pbar-fill { height: 8px; border-radius: 4px; }
+
+/* ── Section headings ── */
+.section-head {
+    font-size: 13px; font-weight: 700; color: #1a6b2f;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border-bottom: 2px solid #e2ede6; padding-bottom: 6px;
+    margin: 1.2rem 0 0.6rem;
+}
+
+/* ── What-if panel ── */
+.wi-match-block {
+    background: #fff; border: 1px solid #e2ede6; border-radius: 12px;
+    padding: 14px 16px; margin: 8px 0;
+}
+.wi-teams-row { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 10px; }
+.wi-vs { font-size: 11px; color: #6b9b7a; font-weight: 600; flex: 1; text-align: center; }
+
+/* ── Before/after comparison ── */
+.compare-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 10px; margin: 4px 0; background: #f8fbf9; border: 1px solid #e2ede6; }
+.compare-team { font-size: 13px; font-weight: 600; flex: 1; }
+.compare-before { font-size: 14px; color: #888; font-weight: 500; min-width: 48px; text-align: center; }
+.compare-arrow { font-size: 14px; color: #aaa; padding: 0 6px; }
+.compare-after { font-size: 16px; font-weight: 800; min-width: 54px; text-align: center; }
+.compare-delta { font-size: 11px; font-weight: 700; min-width: 44px; text-align: right; }
+.delta-pos { color: #1a6b2f; }
+.delta-neg { color: #c0392b; }
+.delta-neu { color: #888; }
+
+/* ── All-teams table ── */
+.at-row { display: flex; align-items: center; padding: 8px 12px; border-radius: 8px; margin: 3px 0; font-size: 13px; }
+.at-row:hover { background: #f0f7f2; }
+.at-rank { width: 28px; color: #aaa; font-size: 12px; font-weight: 700; }
+.at-team { flex: 1; font-weight: 600; color: #1a1a1a; }
+.at-group { width: 44px; color: #6b9b7a; font-size: 12px; font-weight: 600; text-align: center; }
+.at-pts { width: 36px; font-weight: 700; text-align: center; }
+.at-prob { width: 140px; }
+
+/* ── Footer ── */
+.footer { text-align: center; font-size: 12px; color: #6b9b7a; padding: 16px 0 4px; border-top: 1px solid #e2ede6; margin-top: 2rem; }
+.footer a { color: #1a6b2f; text-decoration: none; font-weight: 600; }
+
+/* ── Streamlit overrides ── */
+.stButton > button {
+    background: #1a6b2f !important; color: white !important;
+    border: none !important; border-radius: 10px !important;
+    font-weight: 700 !important; font-size: 14px !important;
+    padding: 10px 24px !important;
+}
+.stButton > button:hover { background: #145523 !important; }
+.stSelectbox label { font-weight: 600; color: #2d4a35; }
+div[data-testid="stMetricValue"] { font-size: 28px !important; font-weight: 800 !important; color: #1a6b2f !important; }
 </style>
 """, unsafe_allow_html=True)
 
 AVG_GOALS = 2.65
-
-def poisson_goal(lam):
-    L = np.exp(-lam)
-    k, p = 0, 1.0
-    while True:
-        k += 1
-        p *= np.random.random()
-        if p <= L:
-            return k - 1
 
 def get_lambda(h_id, a_id):
     h, a = TEAMS[h_id], TEAMS[a_id]
@@ -57,12 +225,9 @@ def calc_standings(scores, group_id, fixtures):
             continue
         hg, ag = s
         h, a = f["h"], f["a"]
-        stats[h]["mp"] += 1
-        stats[a]["mp"] += 1
-        stats[h]["gf"] += hg
-        stats[h]["ga"] += ag
-        stats[a]["gf"] += ag
-        stats[a]["ga"] += hg
+        stats[h]["mp"] += 1; stats[a]["mp"] += 1
+        stats[h]["gf"] += hg; stats[h]["ga"] += ag
+        stats[a]["gf"] += ag; stats[a]["ga"] += hg
         if hg > ag:
             stats[h]["pts"] += 3; stats[h]["w"] += 1; stats[a]["l"] += 1
         elif hg < ag:
@@ -87,10 +252,7 @@ def run_simulation(overrides_tuple=(), n=8000):
                 scores[f["id"]] = overrides[f["id"]]
             else:
                 hl, al = get_lambda(f["h"], f["a"])
-                scores[f["id"]] = (
-                    int(np.random.poisson(hl)),
-                    int(np.random.poisson(al))
-                )
+                scores[f["id"]] = (int(np.random.poisson(hl)), int(np.random.poisson(al)))
         for g in GROUPS:
             ranked = calc_standings(scores, g, FIXTURES)
             for row in ranked[:2]:
@@ -98,325 +260,337 @@ def run_simulation(overrides_tuple=(), n=8000):
     return {t: probs[t] / n for t in TEAMS}
 
 def get_actual_standings(group_id):
-    scores = {}
-    for f in FIXTURES:
-        if f["status"] == "FINISHED":
-            scores[f["id"]] = (f["hs"], f["as"])
+    scores = {f["id"]: (f["hs"], f["as"]) for f in FIXTURES if f["status"] == "FINISHED"}
     return calc_standings(scores, group_id, FIXTURES)
 
 def get_status(prob):
-    if prob >= 0.985:
-        return "QUALIFIED", "pill-qualified"
-    if prob <= 0.015:
-        return "ELIMINATED", "pill-eliminated"
+    if prob >= 0.985: return "QUALIFIED", "pill-qualified"
+    if prob <= 0.015: return "ELIMINATED", "pill-eliminated"
     return "ALIVE", "pill-alive"
 
 def story_text(tid, standings, prob):
     t = TEAMS[tid]
     row = next((r for r in standings if r["id"] == tid), None)
-    if not row:
-        return ""
+    if not row: return ""
     rank = standings.index(row) + 1
     pct = round(prob * 100)
-    remaining = sum(
-        1 for f in FIXTURES
-        if f["g"] == t["group"] and f["status"] == "SCHEDULED"
-        and (f["h"] == tid or f["a"] == tid)
-    )
-    if prob >= 0.985:
-        return f"{t['name']} has mathematically secured their place in the Round of 32."
-    if prob <= 0.015:
-        return f"{t['name']} has been mathematically eliminated from Group {t['group']}."
-    if prob >= 0.80 and rank <= 2:
-        return f"{t['name']} is in a strong position ({pct}%). A win in their next match would all but seal qualification."
-    if prob >= 0.60 and rank == 2:
-        return f"{t['name']} controls their own fate at {pct}%. Avoid defeat and qualification is very likely."
-    if prob >= 0.40 and rank == 3:
-        return f"{t['name']} is on the edge at {pct}%. They need a win and help from other results to advance."
-    if remaining == 1:
-        return f"It all comes down to the final match for {t['name']}. At {pct}%, every goal counts — especially goal difference."
-    if prob < 0.25:
-        return f"{t['name']}'s path is extremely narrow at {pct}%. They need wins and favourable results elsewhere."
+    remaining = sum(1 for f in FIXTURES if f["g"] == t["group"] and f["status"] == "SCHEDULED" and (f["h"] == tid or f["a"] == tid))
+    if prob >= 0.985: return f"{t['name']} has mathematically secured their place in the Round of 32."
+    if prob <= 0.015: return f"{t['name']} has been mathematically eliminated from Group {t['group']}."
+    if prob >= 0.80 and rank <= 2: return f"{t['name']} is in a strong position ({pct}%). A win in their next match would all but seal qualification."
+    if prob >= 0.60 and rank == 2: return f"{t['name']} controls their own fate at {pct}%. Avoid defeat and qualification is very likely."
+    if prob >= 0.40 and rank == 3: return f"{t['name']} is on the edge at {pct}%. They need a win and help from other results to advance."
+    if remaining == 1: return f"It all comes down to the final match for {t['name']}. At {pct}%, every goal counts — especially goal difference."
+    if prob < 0.25: return f"{t['name']}'s path is extremely narrow at {pct}%. They need wins and favourable results elsewhere."
     return f"{t['name']} has a {pct}% chance of advancing from {remaining} remaining match{'es' if remaining > 1 else ''}."
 
-def prob_bar_html(prob, width=90):
+def pbar(prob, max_width=110):
     pct = round(prob * 100)
-    col = "#2d6a0f" if pct >= 70 else "#185FA5" if pct >= 40 else "#a32d2d"
+    col = "#1a6b2f" if pct >= 70 else "#2980b9" if pct >= 40 else "#c0392b"
+    fill_w = int(max_width * prob)
     return (
-        f'<div style="display:flex;align-items:center;gap:8px">'
-        f'<div style="width:{width}px;height:7px;background:#e9ecef;border-radius:4px;overflow:hidden">'
-        f'<div style="width:{pct}%;height:7px;background:{col};border-radius:4px"></div></div>'
-        f'<span style="font-weight:600;font-size:13px;color:{col}">{pct}%</span></div>'
+        f'<div class="pbar-wrap">'
+        f'<div class="pbar-track" style="width:{max_width}px">'
+        f'<div class="pbar-fill" style="width:{fill_w}px;background:{col}"></div></div>'
+        f'<span style="font-weight:700;font-size:13px;color:{col};min-width:36px">{pct}%</span></div>'
     )
 
+# ── Hero ─────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hero">
+  <div class="hero-title">⚽ FIFA World Cup 2026 — Qualification Simulator</div>
+  <div class="hero-sub">USA · Canada · Mexico &nbsp;|&nbsp; Group stage: Jun 11 – Jun 26, 2026</div>
+  <div class="hero-badges">
+    <span class="hero-badge live">● Live</span>
+    <span class="hero-badge">Runs 8,000 simulations per calculation</span>
+    <span class="hero-badge">Predicts scores using team strength data</span>
+    <span class="hero-badge">Test any match result instantly</span>
+    <span class="hero-badge">48 teams · 12 groups</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-st.markdown("## ⚽ FIFA World Cup 2026 — Group Qualification Simulator")
-st.caption("Monte Carlo simulation · Poisson model · What-if engine · Group stage Jun 11 – Jun 26 · Built by Abhi Salunke")
-
-tab1, tab2, tab3, tab4 = st.tabs(["🌍 Overview", "📊 Group view", "🔀 What-if simulator", "📈 All probabilities"])
-
-with st.spinner("Running 8,000 simulations..."):
+with st.spinner("Running simulations..."):
     base_probs = run_simulation(n=8000)
 
+tab1, tab2, tab3, tab4 = st.tabs(["🌍  Overview", "📊  Group view", "🔀  What-if simulator", "📈  All probabilities"])
+
+# ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
 with tab1:
-    st.markdown("### Group stage at a glance")
-    st.caption("Click a group letter in **Group view** to explore standings, results, and team stories.")
+    finished_count = sum(1 for f in FIXTURES if f["status"] == "FINISHED")
+    total = len(FIXTURES)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Matches played", f"{finished_count} / {total}")
+    c2.metric("Teams still alive", sum(1 for t in TEAMS if 0.015 < base_probs.get(t, 0) < 0.985))
+    c3.metric("Groups active", 12)
+
+    st.markdown('<div class="section-head">All 12 groups</div>', unsafe_allow_html=True)
+    st.caption("Green rows = projected top 2. Click **Group view** tab to explore any group in detail.")
+
     cols = st.columns(4)
     for i, g in enumerate(GROUPS):
         standings = get_actual_standings(g)
         with cols[i % 4]:
-            with st.container(border=True):
-                st.markdown(f"**Group {g}**")
-                for j, row in enumerate(standings):
-                    t = TEAMS[row["id"]]
-                    prob = base_probs.get(row["id"], 0)
-                    pct = round(prob * 100)
-                    col = "#2d6a0f" if pct >= 70 else "#185FA5" if pct >= 40 else "#a32d2d"
-                    bg = "rgba(29,158,117,0.07)" if j < 2 else "transparent"
-                    st.markdown(
-                        f'<div style="display:flex;justify-content:space-between;'
-                        f'align-items:center;padding:3px 6px;border-radius:6px;'
-                        f'background:{bg};margin:2px 0;font-size:13px">'
-                        f'<span>{t["flag"]} {t["name"]}</span>'
-                        f'<span style="color:{col};font-weight:600">{pct}%</span></div>',
-                        unsafe_allow_html=True
-                    )
+            rows_html = ""
+            for j, row in enumerate(standings):
+                t = TEAMS[row["id"]]
+                prob = base_probs.get(row["id"], 0)
+                pct = round(prob * 100)
+                col_c = "#1a6b2f" if pct >= 70 else "#2980b9" if pct >= 40 else "#c0392b"
+                cls = "qualify" if j < 2 else ""
+                rows_html += (
+                    f'<div class="group-row {cls}">'
+                    f'<span>{t["name"]}</span>'
+                    f'<span style="color:{col_c};font-weight:700">{pct}%</span>'
+                    f'</div>'
+                )
+            st.markdown(
+                f'<div class="group-card">'
+                f'<div class="group-card-title">⬡ Group {g}</div>'
+                f'{rows_html}</div>',
+                unsafe_allow_html=True
+            )
 
     st.markdown("---")
-    st.caption("Probabilities from 8,000 Monte Carlo runs using a Poisson model with team-specific attack/defense ratings. Green = top 2 qualifying spots.")
+    st.caption("Each team's qualification % is calculated by simulating all remaining matches 8,000 times using historical team strength data. Green rows = projected top 2.")
 
+# ── TAB 2: GROUP VIEW ─────────────────────────────────────────────────────────
 with tab2:
-    g = st.selectbox("Select group", GROUPS, key="group_select")
+    g = st.selectbox("Select group", GROUPS, key="group_select",
+                     format_func=lambda x: f"Group {x}")
     standings = get_actual_standings(g)
     group_fixtures = [f for f in FIXTURES if f["g"] == g]
     completed = [f for f in group_fixtures if f["status"] == "FINISHED"]
-    remaining = [f for f in group_fixtures if f["status"] == "SCHEDULED"]
+    remaining_fx = [f for f in group_fixtures if f["status"] == "SCHEDULED"]
 
-    rows = []
+    # Standings table
+    header = "<thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th>Qual %</th><th>Status</th></tr></thead>"
+    body = "<tbody>"
     for i, row in enumerate(standings):
         t = TEAMS[row["id"]]
         prob = base_probs.get(row["id"], 0)
-        status, _ = get_status(prob)
+        status, scls = get_status(prob)
         gd = row["gf"] - row["ga"]
-        rows.append({
-            "Rank": i + 1,
-            "Team": f'{t["flag"]} {t["name"]}',
-            "P": row["mp"],
-            "W": row["w"],
-            "D": row["d"],
-            "L": row["l"],
-            "GF": row["gf"],
-            "GA": row["ga"],
-            "GD": f'+{gd}' if gd > 0 else str(gd),
-            "Pts": row["pts"],
-            "Qual %": f'{round(prob * 100)}%',
-            "Status": status,
-        })
-
-    df = pd.DataFrame(rows)
-
-    def highlight_rows(row):
-        rank = row["Rank"]
-        if rank == 1:
-            return ["background-color: rgba(29,158,117,0.10)"] * len(row)
-        if rank == 2:
-            return ["background-color: rgba(55,138,221,0.07)"] * len(row)
-        return [""] * len(row)
-
-    st.dataframe(
-        df.style.apply(highlight_rows, axis=1),
-        use_container_width=True,
-        hide_index=True,
+        gd_str = f'+{gd}' if gd > 0 else str(gd)
+        body += (
+            f'<tr>'
+            f'<td>{t["name"]}</td>'
+            f'<td>{row["mp"]}</td><td>{row["w"]}</td><td>{row["d"]}</td><td>{row["l"]}</td>'
+            f'<td>{row["gf"]}</td><td>{row["ga"]}</td><td><strong>{gd_str}</strong></td>'
+            f'<td><strong>{row["pts"]}</strong></td>'
+            f'<td>{pbar(prob)}</td>'
+            f'<td><span class="pill {scls}">{status}</span></td>'
+            f'</tr>'
+        )
+    body += "</tbody>"
+    st.markdown(
+        f'<div class="pitch-table-wrap"><table class="pitch-table">{header}{body}</table></div>',
+        unsafe_allow_html=True
     )
 
     col1, col2 = st.columns(2)
-
     if completed:
         with col1:
-            st.markdown("#### Results")
+            st.markdown('<div class="section-head">Results</div>', unsafe_allow_html=True)
             for f in completed:
                 h, a = TEAMS[f["h"]], TEAMS[f["a"]]
                 st.markdown(
-                    f'<div style="border:0.5px solid #dee2e6;border-radius:10px;padding:10px 14px;margin:6px 0">'
-                    f'<div style="font-size:11px;color:#6c757d;margin-bottom:6px">Matchday {f["md"]} · {f["date"]}</div>'
-                    f'<div style="display:flex;justify-content:space-between;align-items:center">'
-                    f'<span style="font-weight:500;font-size:13px">{h["flag"]} {h["name"]}</span>'
-                    f'<span style="font-size:16px;font-weight:700;padding:0 12px">{f["hs"]} – {f["as"]}</span>'
-                    f'<span style="font-weight:500;font-size:13px">{a["name"]} {a["flag"]}</span>'
+                    f'<div class="match-card">'
+                    f'<div class="match-card-date">Matchday {f["md"]} · {f["date"]}</div>'
+                    f'<div class="match-card-row">'
+                    f'<span class="match-team">{h["name"]}</span>'
+                    f'<span class="match-score">{f["hs"]} – {f["as"]}</span>'
+                    f'<span class="match-team right">{a["name"]}</span>'
                     f'</div></div>',
                     unsafe_allow_html=True
                 )
-
-    if remaining:
+    if remaining_fx:
         with col2:
-            st.markdown("#### Upcoming")
-            for f in remaining:
+            st.markdown('<div class="section-head">Upcoming</div>', unsafe_allow_html=True)
+            for f in remaining_fx:
                 h, a = TEAMS[f["h"]], TEAMS[f["a"]]
                 st.markdown(
-                    f'<div style="border:0.5px solid #dee2e6;border-radius:10px;padding:10px 14px;margin:6px 0">'
-                    f'<div style="font-size:11px;color:#6c757d;margin-bottom:6px">Matchday {f["md"]} · {f["date"]}</div>'
-                    f'<div style="display:flex;justify-content:space-between;align-items:center">'
-                    f'<span style="font-weight:500;font-size:13px">{h["flag"]} {h["name"]}</span>'
-                    f'<span style="font-size:12px;color:#adb5bd;padding:0 12px">vs</span>'
-                    f'<span style="font-weight:500;font-size:13px">{a["name"]} {a["flag"]}</span>'
+                    f'<div class="match-card">'
+                    f'<div class="match-card-date">Matchday {f["md"]} · {f["date"]}</div>'
+                    f'<div class="match-card-row">'
+                    f'<span class="match-team">{h["name"]}</span>'
+                    f'<span class="match-upcoming">vs</span>'
+                    f'<span class="match-team right">{a["name"]}</span>'
                     f'</div></div>',
                     unsafe_allow_html=True
                 )
 
-    st.markdown("#### Team stories")
+    st.markdown('<div class="section-head">Team analysis</div>', unsafe_allow_html=True)
     for row in standings:
         t = TEAMS[row["id"]]
         prob = base_probs.get(row["id"], 0)
         story = story_text(row["id"], standings, prob)
         st.markdown(
-            f'<div class="story-box"><strong>{t["flag"]} {t["name"]}:</strong> {story}</div>',
+            f'<div class="story-card"><strong>{t["name"]}:</strong> {story}</div>',
             unsafe_allow_html=True
         )
 
+# ── TAB 3: WHAT-IF ───────────────────────────────────────────────────────────
 with tab3:
-    st.markdown("### What-if simulator")
-    st.caption("Fix specific match scores, then run the simulation to see how qualification probabilities change for the group.")
+    st.markdown("""
+    <div style="background:#f0f7f2;border:1px solid #c8e6d0;border-radius:12px;padding:12px 16px;margin-bottom:1rem;font-size:13px;color:#2d4a35">
+    <strong>How it works:</strong> Fix any upcoming match result using the checkboxes below, then hit <strong>Run simulation</strong>.
+    The tool re-runs 8,000 scenarios with your chosen score locked in, and shows how each team's qualification chance changes.
+    </div>
+    """, unsafe_allow_html=True)
 
-    wi_group = st.selectbox("Select group", GROUPS, key="wi_group")
+    wi_group = st.selectbox("Select group", GROUPS, key="wi_group", format_func=lambda x: f"Group {x}")
     wi_remaining = [f for f in FIXTURES if f["g"] == wi_group and f["status"] == "SCHEDULED"]
 
     if not wi_remaining:
-        st.info(f"All Group {wi_group} matches have been played.")
+        st.success(f"All Group {wi_group} matches have been played — no what-if needed!")
     else:
         overrides = {}
-        st.markdown("**Set match results**")
+        st.markdown('<div class="section-head">Set match results</div>', unsafe_allow_html=True)
+
         for f in wi_remaining:
             h, a = TEAMS[f["h"]], TEAMS[f["a"]]
-            fix_col, home_col, sep_col, away_col = st.columns([0.3, 0.3, 0.05, 0.35])
-            with fix_col:
+            chk_col, rest_col = st.columns([0.28, 0.72])
+            with chk_col:
                 fix = st.checkbox(
-                    f'Fix: {h["name"]} vs {a["name"]}',
-                    key=f'fix_{f["id"]}'
+                    f'Fix result',
+                    key=f'fix_{f["id"]}',
+                    help=f'{h["name"]} vs {a["name"]} · Matchday {f["md"]} · {f["date"]}'
                 )
-            if fix:
-                with home_col:
-                    hg = st.number_input(
-                        f'{h["flag"]} {h["name"]}',
-                        min_value=0, max_value=15, value=1,
-                        key=f'hg_{f["id"]}'
+            with rest_col:
+                if fix:
+                    st.markdown(
+                        f'<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:4px">'
+                        f'<span>{h["name"]}</span>'
+                        f'<span style="color:#6b9b7a">vs</span>'
+                        f'<span>{a["name"]}</span>'
+                        f'<span style="font-size:11px;color:#6b9b7a;font-weight:400">· MD{f["md"]} · {f["date"]}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True
                     )
-                with sep_col:
-                    st.markdown("<div style='padding-top:32px;text-align:center'>–</div>", unsafe_allow_html=True)
-                with away_col:
-                    ag = st.number_input(
-                        f'{a["flag"]} {a["name"]}',
-                        min_value=0, max_value=15, value=0,
-                        key=f'ag_{f["id"]}'
+                    sc1, sc2, sc3 = st.columns([1, 0.12, 1])
+                    with sc1:
+                        hg = st.number_input(f'{h["name"]} goals', min_value=0, max_value=15, value=1, key=f'hg_{f["id"]}', label_visibility="collapsed")
+                    with sc2:
+                        st.markdown("<div style='text-align:center;padding-top:8px;font-weight:700;color:#888'>–</div>", unsafe_allow_html=True)
+                    with sc3:
+                        ag = st.number_input(f'{a["name"]} goals', min_value=0, max_value=15, value=0, key=f'ag_{f["id"]}', label_visibility="collapsed")
+                    overrides[f["id"]] = (int(hg), int(ag))
+                else:
+                    st.markdown(
+                        f'<div style="font-size:13px;color:#aaa;margin-top:4px">'
+                        f'{h["name"]} vs {a["name"]} &nbsp;·&nbsp; MD{f["md"]} · {f["date"]}'
+                        f'</div>',
+                        unsafe_allow_html=True
                     )
-                overrides[f["id"]] = (int(hg), int(ag))
 
-        run = st.button("Run simulation ▶", type="primary")
+        st.markdown("")
+        run = st.button("▶  Run simulation", type="primary")
 
-        if run and overrides:
-            with st.spinner("Running 8,000 simulations with your what-if results..."):
-                ov_tuple = tuple(sorted((k, v) for k, v in overrides.items()))
-                wi_probs = run_simulation(overrides_tuple=ov_tuple, n=8000)
+        if run:
+            if not overrides:
+                st.warning("Tick at least one match to fix before running.")
+            else:
+                with st.spinner(f"Running 8,000 simulations for Group {wi_group}..."):
+                    ov_tuple = tuple(sorted((k, v) for k, v in overrides.items()))
+                    wi_probs = run_simulation(overrides_tuple=ov_tuple, n=8000)
 
-            st.markdown(f"#### Probability comparison — Group {wi_group}")
-            wi_standings = get_actual_standings(wi_group)
-            comp_rows = []
-            for row in wi_standings:
-                t = TEAMS[row["id"]]
-                before = round(base_probs.get(row["id"], 0) * 100)
-                after = round(wi_probs.get(row["id"], 0) * 100)
-                delta = after - before
-                comp_rows.append({
-                    "Team": f'{t["flag"]} {t["name"]}',
-                    "Before": f"{before}%",
-                    "After (what-if)": f"{after}%",
-                    "Change": f"+{delta}%" if delta > 0 else f"{delta}%" if delta < 0 else "no change",
-                })
+                st.markdown(f'<div class="section-head">Probability comparison — Group {wi_group}</div>', unsafe_allow_html=True)
+                wi_standings = get_actual_standings(wi_group)
 
-            comp_df = pd.DataFrame(comp_rows)
+                for row in wi_standings:
+                    t = TEAMS[row["id"]]
+                    before = base_probs.get(row["id"], 0)
+                    after = wi_probs.get(row["id"], 0)
+                    before_pct = round(before * 100)
+                    after_pct = round(after * 100)
+                    delta = after_pct - before_pct
+                    dcls = "delta-pos" if delta > 0 else "delta-neg" if delta < 0 else "delta-neu"
+                    dstr = f"+{delta}%" if delta > 0 else f"{delta}%" if delta < 0 else "—"
+                    after_col = "#1a6b2f" if after_pct >= 70 else "#2980b9" if after_pct >= 40 else "#c0392b"
+                    st.markdown(
+                        f'<div class="compare-row">'
+                        f'<span class="compare-team">{t["name"]}</span>'
+                        f'<span class="compare-before">{before_pct}%</span>'
+                        f'<span class="compare-arrow">→</span>'
+                        f'<span class="compare-after" style="color:{after_col}">{after_pct}%</span>'
+                        f'<span class="compare-delta {dcls}">{dstr}</span>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
 
-            def colour_delta(val):
-                if val.startswith("+"):
-                    return "color: #2d6a0f; font-weight: 600"
-                if val.startswith("-"):
-                    return "color: #a32d2d; font-weight: 600"
-                return "color: #6c757d"
+                st.markdown('<div class="section-head">Updated team analysis</div>', unsafe_allow_html=True)
+                for row in wi_standings:
+                    t = TEAMS[row["id"]]
+                    prob = wi_probs.get(row["id"], 0)
+                    story = story_text(row["id"], wi_standings, prob)
+                    st.markdown(
+                        f'<div class="story-card"><strong>{t["name"]}:</strong> {story}</div>',
+                        unsafe_allow_html=True
+                    )
 
-            st.dataframe(
-                comp_df.style.map(colour_delta, subset=["Change"]),
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            st.markdown("#### Updated stories")
-            for row in wi_standings:
-                t = TEAMS[row["id"]]
-                prob = wi_probs.get(row["id"], 0)
-                story = story_text(row["id"], wi_standings, prob)
-                st.markdown(
-                    f'<div class="story-box"><strong>{t["flag"]} {t["name"]}:</strong> {story}</div>',
-                    unsafe_allow_html=True
-                )
-        elif run and not overrides:
-            st.warning("Check at least one match to fix before running.")
-
+# ── TAB 4: ALL PROBABILITIES ─────────────────────────────────────────────────
 with tab4:
-    st.markdown("### All 48 teams ranked by qualification probability")
+    st.markdown('<div class="section-head">All 48 teams ranked by qualification probability</div>', unsafe_allow_html=True)
 
-    conf_filter = st.selectbox(
-        "Filter by confederation",
-        ["All", "UEFA", "CONMEBOL", "CONCACAF", "CAF", "AFC", "OFC"],
-        key="conf_filter"
-    )
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        conf_filter = st.selectbox("Confederation", ["All", "UEFA", "CONMEBOL", "CONCACAF", "CAF", "AFC", "OFC"])
+    with c2:
+        sort_by = st.selectbox("Sort by", ["Qualification probability", "Points", "Group"])
 
     all_rows = []
     for tid, t in TEAMS.items():
-        standings = get_actual_standings(t["group"])
-        row = next((r for r in standings if r["id"] == tid), None)
+        s = get_actual_standings(t["group"])
+        row = next((r for r in s if r["id"] == tid), None)
         pts = row["pts"] if row else 0
         prob = base_probs.get(tid, 0)
-        status, _ = get_status(prob)
-        all_rows.append({
-            "Team": f'{t["flag"]} {t["name"]}',
-            "Group": t["group"],
-            "Confederation": t.get("conf", ""),
-            "Pts": pts,
-            "Qual %": round(prob * 100),
-            "Status": status,
-            "_prob": prob,
-            "_tid": tid,
-        })
-
-    all_rows.sort(key=lambda r: r["_prob"], reverse=True)
+        status, scls = get_status(prob)
+        all_rows.append({"id": tid, "name": t["name"], "flag": t["flag"], "group": t["group"],
+                         "conf": t.get("conf", ""), "pts": pts, "prob": prob, "status": status, "scls": scls})
 
     if conf_filter != "All":
-        all_rows = [r for r in all_rows if r["Confederation"] == conf_filter]
+        all_rows = [r for r in all_rows if r["conf"] == conf_filter]
 
-    display_rows = []
-    for i, r in enumerate(all_rows):
-        display_rows.append({
-            "#": i + 1,
-            "Team": r["Team"],
-            "Group": r["Group"],
-            "Pts": r["Pts"],
-            "Qual %": f'{r["Qual %"]}%',
-            "Status": r["Status"],
-        })
+    if sort_by == "Qualification probability":
+        all_rows.sort(key=lambda r: r["prob"], reverse=True)
+    elif sort_by == "Points":
+        all_rows.sort(key=lambda r: r["pts"], reverse=True)
+    else:
+        all_rows.sort(key=lambda r: (r["group"], -r["prob"]))
 
-    def highlight_status(row):
-        s = row["Status"]
-        if s == "QUALIFIED":
-            return ["background-color: rgba(29,158,117,0.08)"] * len(row)
-        if s == "ELIMINATED":
-            return ["background-color: rgba(163,45,45,0.05)"] * len(row)
-        return [""] * len(row)
-
-    st.dataframe(
-        pd.DataFrame(display_rows).style.apply(highlight_status, axis=1),
-        use_container_width=True,
-        hide_index=True,
-        height=900,
+    # Header row
+    st.markdown(
+        '<div class="at-row" style="font-size:11px;font-weight:700;color:#6b9b7a;letter-spacing:0.05em;border-bottom:1px solid #e2ede6;margin-bottom:4px">'
+        '<span class="at-rank">#</span><span class="at-team">Team</span>'
+        '<span class="at-group">Group</span><span class="at-pts">Pts</span>'
+        '<span class="at-prob">Qual probability</span>'
+        '<span style="min-width:88px;text-align:right">Status</span></div>',
+        unsafe_allow_html=True
     )
-    st.caption("Ranked by Monte Carlo qualification probability. Green = qualified, Red = eliminated, White = still in contention.")
+    for i, r in enumerate(all_rows):
+        col_c = "#1a6b2f" if r["prob"] >= 0.70 else "#2980b9" if r["prob"] >= 0.40 else "#c0392b"
+        bg = "rgba(26,107,47,0.04)" if i % 2 == 0 else "transparent"
+        st.markdown(
+            f'<div class="at-row" style="background:{bg}">'
+            f'<span class="at-rank">{i+1}</span>'
+            f'<span class="at-team">{r["name"]}</span>'
+            f'<span class="at-group">{r["group"]}</span>'
+            f'<span class="at-pts" style="color:{col_c}">{r["pts"]}</span>'
+            f'<span class="at-prob">{pbar(r["prob"])}</span>'
+            f'<span style="min-width:88px;text-align:right"><span class="pill {r["scls"]}">{r["status"]}</span></span>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+    st.markdown("")
+    st.caption(f"Showing {len(all_rows)} teams · Sorted by {sort_by.lower()} · Qualification % based on 8,000 simulated outcomes")
 
-st.markdown("---")
-st.caption("Built by **Abhi Salunke** · Senior Data Engineer · [LinkedIn](https://linkedin.com/in/abhisheksalunke12) · [Medium](https://medium.com/@abhisheksalunke) · Data: football-data.org · Model: Poisson + Monte Carlo")
+# ── Footer ───────────────────────────────────────────────────────────────────
+st.markdown(
+    '<div class="footer">'
+    'Built by <strong>Abhishek Salunke</strong> · Senior Data Engineer · '
+    '<a href="https://linkedin.com/in/abhisheksalunke12" target="_blank">LinkedIn</a> · '
+    '<a href="https://medium.com/@abhisheksalunke" target="_blank">Medium</a>'
+    '</div>',
+    unsafe_allow_html=True
+)
