@@ -1,16 +1,12 @@
 """
 live_data.py
-Fetches live FIFA World Cup 2026 match results from football-data.org
-and merges them into the static FIXTURES list from data.py.
+Fetches live FIFA World Cup 2026 scores from the openfootball/worldcup.json
+GitHub repository — completely free, no API key required.
 
-Setup:
-  1. Get a free API key at https://www.football-data.org/client/register
-  2. In Streamlit Community Cloud → App settings → Secrets, add:
-       [api]
-       football_data_key = "YOUR_KEY_HERE"
-  3. For local dev, create .streamlit/secrets.toml with the same content.
-
-If no key is configured, the app silently falls back to static data.py fixtures.
+URL: https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json
+Updated: manually by the openfootball community ~once per day during the tournament.
+Cache: 10 minutes (ttl=600) so repeated page loads don't hammer GitHub.
+Fallback: if the fetch fails for any reason, the app uses static data.py fixtures.
 """
 
 import requests
@@ -18,171 +14,141 @@ import streamlit as st
 from datetime import datetime, timezone
 from data import FIXTURES, TEAMS
 
-API_BASE = "https://api.football-data.org/v4"
-WC_CODE  = "WC"
+API_URL = (
+    "https://raw.githubusercontent.com/openfootball/"
+    "worldcup.json/master/2026/worldcup.json"
+)
 
-# Map football-data.org team names → our team IDs
+# Map openfootball team names → our team IDs in data.py
 TEAM_NAME_MAP = {
-    "Mexico":                  "MEX",
-    "South Korea":             "KOR",
-    "Korea Republic":          "KOR",
-    "Czech Republic":          "CZE",
-    "Czechia":                 "CZE",
-    "South Africa":            "ZAF",
-    "Canada":                  "CAN",
-    "Bosnia and Herzegovina":  "BIH",
-    "Bosnia & Herzegovina":    "BIH",
-    "Switzerland":             "SUI",
-    "Qatar":                   "QAT",
-    "Germany":                 "GER",
-    "Côte d'Ivoire":           "CIV",
-    "Ivory Coast":             "CIV",
-    "Ecuador":                 "ECU",
-    "Curaçao":                 "CUW",
-    "Netherlands":             "NED",
-    "Japan":                   "JPN",
-    "Sweden":                  "SWE",
-    "Tunisia":                 "TUN",
-    "Belgium":                 "BEL",
-    "Egypt":                   "EGY",
-    "Iran":                    "IRN",
-    "New Zealand":             "NZL",
-    "Spain":                   "ESP",
-    "Uruguay":                 "URU",
-    "Saudi Arabia":            "KSA",
-    "Cape Verde":              "CPV",
-    "France":                  "FRA",
-    "Senegal":                 "SEN",
-    "Norway":                  "NOR",
-    "Iraq":                    "IRQ",
-    "Portugal":                "POR",
-    "Argentina":               "ARG",
-    "Croatia":                 "CRO",
-    "Algeria":                 "ALG",
-    "England":                 "ENG",
-    "Brazil":                  "BRA",
-    "Colombia":                "COL",
-    "Morocco":                 "MAR",
-    "United States":           "USA",
-    "USA":                     "USA",
-    "Turkey":                  "TUR",
-    "Türkiye":                 "TUR",
-    "Ghana":                   "GHA",
-    "DR Congo":                "COD",
-    "Congo DR":                "COD",
-    "Australia":               "AUS",
-    "Austria":                 "AUT",
-    "Scotland":                "SCO",
-    "Uzbekistan":              "UZB",
-    "Paraguay":                "PAR",
-    "Jordan":                  "JOR",
-    "Venezuela":               "VEN",
+    "Mexico":               "MEX",
+    "South Africa":         "ZAF",
+    "South Korea":          "KOR",
+    "Czech Republic":       "CZE",
+    "Canada":               "CAN",
+    "Bosnia and Herzegovina": "UEFA_A",   # UEFA Path A winner
+    "Qatar":                "QAT",
+    "Switzerland":          "SUI",
+    "Brazil":               "BRA",
+    "Morocco":              "MAR",
+    "Haiti":                "HTI",
+    "Scotland":             "SCO",
+    "USA":                  "USA",
+    "United States":        "USA",
+    "Paraguay":             "PAR",
+    "Australia":            "AUS",
+    "Türkiye":              "UEFA_C",    # UEFA Path C winner
+    "Turkey":               "UEFA_C",
+    "Germany":              "GER",
+    "Curaçao":              "CUW",
+    "Curacao":              "CUW",
+    "Ivory Coast":          "CIV",
+    "Côte d'Ivoire":        "CIV",
+    "Ecuador":              "ECU",
+    "Netherlands":          "NED",
+    "Japan":                "JPN",
+    "Sweden":               "UEFA_B",    # UEFA Path B winner
+    "Tunisia":              "TUN",
+    "Belgium":              "BEL",
+    "Egypt":                "EGY",
+    "Iran":                 "IRN",
+    "New Zealand":          "NZL",
+    "Spain":                "ESP",
+    "Cape Verde":           "CPV",
+    "Saudi Arabia":         "KSA",
+    "Uruguay":              "URU",
+    "France":               "FRA",
+    "Senegal":              "SEN",
+    "Iraq":                 "IC2",       # IC Path 2 winner
+    "Norway":               "NOR",
+    "Argentina":            "ARG",
+    "Algeria":              "ALG",
+    "Austria":              "AUT",
+    "Jordan":               "JOR",
+    "Portugal":             "POR",
+    "DR Congo":             "IC1",       # IC Path 1 winner
+    "Congo DR":             "IC1",
+    "Democratic Republic of Congo": "IC1",
+    "Uzbekistan":           "UZB",
+    "Colombia":             "COL",
+    "England":              "ENG",
+    "Croatia":              "CRO",
+    "Ghana":                "GHA",
+    "Panama":               "PAN",
+    # Placeholder strings from openfootball when qualifiers not yet resolved
+    "UEFA Path A winner":   "UEFA_A",
+    "UEFA Path B winner":   "UEFA_B",
+    "UEFA Path C winner":   "UEFA_C",
+    "UEFA Path D winner":   "CZE",
+    "IC Path 1 winner":     "IC1",
+    "IC Path 2 winner":     "IC2",
 }
 
-def _get_api_key():
-    """Read API key from Streamlit secrets, return None if not configured."""
+def _parse_date(date_str):
+    """Convert '2026-06-14' → 'Jun 14'."""
     try:
-        return st.secrets["api"]["football_data_key"]
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        return dt.strftime("Jun %d").replace(" 0", " ")
     except Exception:
-        return None
+        return date_str
 
 @st.cache_data(ttl=600, show_spinner=False)
 def fetch_live_fixtures():
     """
-    Fetch all WC 2026 matches from the API.
-    Returns a list of dicts in the same shape as FIXTURES in data.py,
-    or None if the API call fails / no key is set.
-    Cached for 10 minutes (ttl=600 seconds).
+    Download worldcup.json and return group-stage matches as a list of
+    dicts in the same shape as FIXTURES in data.py, or None on failure.
+    Cached for 10 minutes.
     """
-    key = _get_api_key()
-    if not key:
-        return None
-
     try:
-        resp = requests.get(
-            f"{API_BASE}/competitions/{WC_CODE}/matches",
-            headers={"X-Auth-Token": key},
-            timeout=8,
-        )
-        if resp.status_code == 429:
-            # Rate limited — return None, use static fallback
-            return None
+        resp = requests.get(API_URL, timeout=8)
         resp.raise_for_status()
-        raw = resp.json().get("matches", [])
+        data = resp.json()
     except Exception:
         return None
 
-    live_fixtures = []
-    for m in raw:
-        # Only group stage matches
-        stage = m.get("stage", "")
-        if "GROUP" not in stage.upper():
-            continue
+    live = []
+    for m in data.get("matches", []):
+        group_raw = m.get("group", "")
+        if not group_raw or not group_raw.startswith("Group "):
+            continue  # skip knockout rounds
 
-        home_name = m.get("homeTeam", {}).get("name", "")
-        away_name = m.get("awayTeam", {}).get("name", "")
-        home_id = TEAM_NAME_MAP.get(home_name)
-        away_id = TEAM_NAME_MAP.get(away_name)
+        group_id = group_raw.replace("Group ", "").strip()
+        t1_name  = m.get("team1", "")
+        t2_name  = m.get("team2", "")
+        h_id = TEAM_NAME_MAP.get(t1_name)
+        a_id = TEAM_NAME_MAP.get(t2_name)
 
-        if not home_id or not away_id:
-            continue
+        if not h_id or not a_id:
+            continue  # unknown team — skip
 
-        status_raw = m.get("status", "SCHEDULED")
-        if status_raw in ("FINISHED", "AWARDED"):
+        score = m.get("score", {})
+        ft    = score.get("ft") if score else None
+
+        if ft and len(ft) == 2:
             status = "FINISHED"
-            score = m.get("score", {}).get("fullTime", {})
-            hs = score.get("home") or 0
-            as_ = score.get("away") or 0
-        elif status_raw in ("IN_PLAY", "PAUSED", "HALFTIME"):
-            status = "LIVE"
-            score = m.get("score", {}).get("fullTime", {})
-            hs = score.get("home") or 0
-            as_ = score.get("away") or 0
+            hs, as_ = int(ft[0]), int(ft[1])
         else:
             status = "SCHEDULED"
-            hs = None
-            as_ = None
+            hs, as_ = None, None
 
-        # Parse matchday and date
-        matchday = m.get("matchday", 1)
-        utc_date = m.get("utcDate", "")
-        try:
-            dt = datetime.fromisoformat(utc_date.replace("Z", "+00:00"))
-            date_str = dt.strftime("Jun %d").replace(" 0", " ")
-        except Exception:
-            date_str = ""
-
-        # Derive group from groupName e.g. "GROUP_A" → "A"
-        group_raw = m.get("group", "") or ""
-        group_id = group_raw.replace("GROUP_", "").strip()
-        if not group_id and home_id in TEAMS:
-            group_id = TEAMS[home_id]["group"]
-
-        # Build unique ID matching our static fixture IDs format
-        fixture_id = f"{group_id}{matchday}_{home_id}_{away_id}"
-
-        live_fixtures.append({
-            "id":     fixture_id,
-            "g":      group_id,
-            "h":      home_id,
-            "a":      away_id,
-            "md":     matchday,
+        live.append({
+            "group":  group_id,
+            "home":   h_id,
+            "away":   a_id,
+            "round":  m.get("round", ""),
+            "date":   _parse_date(m.get("date", "")),
             "status": status,
             "hs":     hs,
             "as":     as_,
-            "date":   date_str,
         })
 
-    return live_fixtures if live_fixtures else None
+    return live if live else None
 
 
 def get_merged_fixtures():
     """
-    Return the best available fixture list:
-    - If API succeeds: use live data merged with static fixture IDs
-    - If API fails/no key: use static FIXTURES from data.py
-
-    Also returns a status string for display.
+    Merge live API data into the static FIXTURES list.
+    Returns (fixtures_list, source_string, status_message).
     """
     live = fetch_live_fixtures()
 
@@ -190,35 +156,30 @@ def get_merged_fixtures():
         return list(FIXTURES), "static", None
 
     # Build lookup by (home_id, away_id) from live data
-    live_lookup = {(f["h"], f["a"]): f for f in live}
+    live_lookup = {(f["home"], f["away"]): f for f in live}
 
     merged = []
-    for static_f in FIXTURES:
-        key = (static_f["h"], static_f["a"])
-        if key in live_lookup:
-            lf = live_lookup[key]
+    for sf in FIXTURES:
+        key = (sf["h"], sf["a"])
+        lf  = live_lookup.get(key)
+        if lf:
             merged.append({
-                "id":     static_f["id"],   # keep original ID for stability
-                "g":      static_f["g"],
-                "h":      static_f["h"],
-                "a":      static_f["a"],
-                "md":     static_f["md"],
+                "id":     sf["id"],
+                "g":      sf["g"],
+                "h":      sf["h"],
+                "a":      sf["a"],
+                "md":     sf["md"],
                 "status": lf["status"],
                 "hs":     lf["hs"],
                 "as":     lf["as"],
-                "date":   static_f["date"],
+                "date":   sf["date"],
             })
         else:
-            merged.append(dict(static_f))
+            merged.append(dict(sf))
 
-    # Count live matches for status message
-    live_count  = sum(1 for f in merged if f["status"] == "LIVE")
-    done_count  = sum(1 for f in merged if f["status"] == "FINISHED")
-    last_update = datetime.now(timezone.utc).strftime("%H:%M UTC")
+    done  = sum(1 for f in merged if f["status"] == "FINISHED")
+    total = len(merged)
+    ts    = datetime.now(timezone.utc).strftime("%H:%M UTC")
+    msg   = f"Live data via openfootball/worldcup.json · {done}/{total} group matches played · Updated {ts}"
 
-    status_msg = f"Live data · {done_count} matches played"
-    if live_count:
-        status_msg += f" · {live_count} in progress"
-    status_msg += f" · Updated {last_update}"
-
-    return merged, "live", status_msg
+    return merged, "live", msg
