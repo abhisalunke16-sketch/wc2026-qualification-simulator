@@ -211,8 +211,7 @@ def get_all_data():
             total = len(fixtures)
             ts    = datetime.now(timezone.utc).strftime("%H:%M UTC")
             msg   = (
-                f"Live data via openfootball/worldcup.json "
-                f"· {done}/{total} group matches played · Updated {ts}"
+                f"{done}/{total} group matches played · Updated {ts}"
             )
             return teams, fixtures, "live", msg
 

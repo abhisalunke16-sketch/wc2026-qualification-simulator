@@ -214,10 +214,18 @@ div[data-testid="stMetricValue"] { font-size: 28px !important; font-weight: 800 
 p, li, span { color: #ffffff; }
 h1, h2, h3 { color: #a8e6b8 !important; }
 
-@media (prefers-color-scheme: light) {
-    html, body, [class*="css"], .stApp, .block-container,
-    p, span, div, label, .stMarkdown, .stText { color: #000000 !important; }
-}
+/* Light theme only — targets Streamlit's theme attribute */
+[data-theme="light"] html,
+[data-theme="light"] body,
+[data-theme="light"] [class*="css"],
+[data-theme="light"] p,
+[data-theme="light"] span,
+[data-theme="light"] div,
+[data-theme="light"] label,
+[data-theme="light"] .stMarkdown,
+[data-theme="light"] .stText,
+[data-theme="light"] .stApp,
+[data-theme="light"] .block-container { color: #000000 !important; }
 </style>
 """, unsafe_allow_html=True)
 
