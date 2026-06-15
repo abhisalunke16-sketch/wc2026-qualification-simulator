@@ -71,7 +71,7 @@ risk modeling, which is what I'm building next.
 
 ## About the Author
 
-Senior Data Engineer specializing in space data infrastructure.
+Senior Data Engineer specializing in data infrastructure.
 Based in Ottawa, Canada.
 
 🔗 [LinkedIn](https://linkedin.com/in/abhisheksalunke12) ·
